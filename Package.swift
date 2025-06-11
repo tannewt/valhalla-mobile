@@ -2,27 +2,13 @@
 import PackageDescription
 
 // Use the local binary if true
-let useLocalBinary = Context.environment["VALHALLA_MOBILE_DEV"].flatMap(Bool.init) ?? false
+let useLocalBinary = true
 
 // Use the local binary
 var binaryTarget: Target = .binaryTarget(
     name: "ValhallaWrapper",
     path: "build/apple/valhalla-wrapper.xcframework"
 )
-
-// CI will replace the nils with the actual values when building a release
-let version: String = "0.1.7"
-let binaryURL: String =
-    "https://github.com/Rallista/valhalla-mobile/releases/download/\(version)/valhalla-wrapper.xcframework.zip"
-let binaryChecksum: String = "4b3b97dcd5e10f08e32d8517b90b7bd819b9eaf2b4c7493b2de8da89717ad43c"
-
-if !useLocalBinary {
-    binaryTarget = .binaryTarget(
-        name: "ValhallaWrapper",
-        url: binaryURL,
-        checksum: binaryChecksum
-    )
-}
 
 let package = Package(
     name: "ValhallaMobile",

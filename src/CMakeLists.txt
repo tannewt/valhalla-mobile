@@ -54,7 +54,7 @@ install(DIRECTORY wrapper/include DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 set(protobuf_BUILD_STATIC_LIBS ON CACHE INTERNAL "")
 
 set(Protobuf_INCLUDE_DIR ${protobuf_SOURCE_DIR}/src)
-set(Protobuf_LIBRARIES protobuf::libprotobuf-lite)
+set(Protobuf_LIBRARIES protobuf::libprotobuf)
 
 find_package(absl CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
@@ -125,7 +125,7 @@ if (APPLE)
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
 
-    install_vcpkg_libs(liblz4 libprotobuf-lite)
+    install_vcpkg_libs(liblz4 libprotobuf)
     install_vcpkg_libs_wildcard("libabsl*")
     install_vcpkg_libs_wildcard("libutf8*")
 endif()

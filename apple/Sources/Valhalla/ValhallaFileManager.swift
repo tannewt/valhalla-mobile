@@ -1,6 +1,7 @@
 import Foundation
 import ValhallaConfigModels
 import Light_Swift_Untar
+import os.log
 
 enum ValhallaFileManagerError: Error {
     case tzdataNotFound
@@ -8,6 +9,7 @@ enum ValhallaFileManagerError: Error {
 }
 
 enum ValhallaFileManager {
+    private static let logger = Logger(subsystem: "ValhallaFileManager", category: "routing")
     
     static func saveConfigTo(_ config: ValhallaConfig) throws -> URL {
         guard let applicationDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
@@ -34,16 +36,27 @@ enum ValhallaFileManager {
         guard let tzdataFileURL = Bundle.module.url(forResource: "tzdata", withExtension: "tar") else {
             throw ValhallaFileManagerError.tzdataNotFound
         }
+        Self.logger.info("tzdata file url: \(tzdataFileURL)")
 
         guard let libraryDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first else {
             throw ValhallaFileManagerError.systemDirNotFound("library")
         }
 
         let tzdataFileData = try Data(contentsOf: tzdataFileURL)
+        Self.logger.info("tzdata file size: \(tzdataFileData.count) bytes")
         let libraryURL = libraryDir.appendingPathComponent("tzdata")
 
         // Write the tar to Library/tzdata
         // TODO: We can create our own tar extract here if we want to avoid the dependency
-        try FileManager.default.createFilesAndDirectories(url: libraryURL, tarData: tzdataFileData)
+        let result = try FileManager.default.createFilesAndDirectories(url: libraryURL, tarData: tzdataFileData)
+        Self.logger.info("Loaded tzdata: \(result)")
+        let tzDataVersion = libraryURL.appendingPathComponent("version")
+        // Open the version file and print it out
+        if let versionData = try? Data(contentsOf: tzDataVersion),
+           let versionString = String(data: versionData, encoding: .utf8) {
+            Self.logger.info("tzdata version: \(versionString)")
+        } else {
+            Self.logger.warning("Could not read tzdata version file")
+        }
     }
 }
