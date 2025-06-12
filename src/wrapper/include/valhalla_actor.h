@@ -11,6 +11,7 @@ public:
     ValhallaActor(const std::string& config_path);
     
     std::string route(const std::string& request);
+    std::string trace_attributes(const std::string& request);
 };
 
 #endif // VALHALLAACTOR_H

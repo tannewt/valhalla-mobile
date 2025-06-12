@@ -10,6 +10,10 @@ public protocol ValhallaProviding {
     init(configPath: String) throws
 
     func route(request: RouteRequest) throws -> RouteResponse
+    
+    func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse
+    
+    func traceAttributes(rawRequest request: String) -> String
 }
 
 public final class Valhalla: ValhallaProviding {
@@ -70,12 +74,46 @@ public final class Valhalla: ValhallaProviding {
         Self.logger.info("Route calculation completed successfully")
         return try JSONDecoder().decode(RouteResponse.self, from: resultData)
     }
+    
+    public func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse {
+        Self.logger.info("Starting trace attributes calculation")
+        let requestData = try JSONEncoder().encode(request)
+        guard let requestStr = String(data: requestData, encoding: .utf8) else {
+            Self.logger.error("Failed to encode request to UTF-8")
+            throw ValhallaError.encodingNotUtf8("requestStr")
+        }
+        
+        Self.logger.debug("Sending trace attributes request: \(requestStr)")
+        let resultStr = traceAttributes(rawRequest: requestStr)
+        Self.logger.debug("Received trace attributes response: \(resultStr)")
+        
+        guard let resultData = resultStr.data(using: .utf8) else {
+            Self.logger.error("Failed to decode response from UTF-8")
+            throw ValhallaError.encodingNotUtf8("resultData")
+        }
+        
+        if let error = try? JSONDecoder().decode(ValhallaErrorModel.self, from: resultData) {
+            Self.logger.error("Trace attributes calculation failed: \(error.message)")
+            throw ValhallaError.valhallaError(error.code, error.message)
+        }
+        
+        Self.logger.info("Trace attributes calculation completed successfully")
+        return try JSONDecoder().decode(TraceAttributesResponse.self, from: resultData)
+    }
 
     public func route(rawRequest request: String) -> String {
         Self.logger.debug("Processing raw route request")
         Self.logger.debug("Timezone version: \(TimeZone.timeZoneDataVersion)")
         let result = actor!.route(request)!
         Self.logger.debug("Raw route request completed")
+        return result
+    }
+    
+    public func traceAttributes(rawRequest request: String) -> String {
+        Self.logger.debug("Processing raw trace_attributes request")
+        Self.logger.debug("Timezone version: \(TimeZone.timeZoneDataVersion)")
+        let result = actor!.traceAttributes(request)!
+        Self.logger.debug("Raw trace_attributes request completed")
         return result
     }
 }
