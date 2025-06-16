@@ -13,10 +13,10 @@ var binaryTarget: Target = .binaryTarget(
 let package = Package(
     name: "ValhallaMobile",
     platforms: [
-        .iOS("16.4")
+        .iOS("16.4"),
         // .tvOS(.v13),
         // .watchOS(.v6),
-        // .macOS(.v10_13)
+        .macOS(.v10_15)
     ],
     products: [
         .library(

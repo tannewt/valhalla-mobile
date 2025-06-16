@@ -71,8 +71,14 @@ public final class Valhalla: ValhallaProviding {
             throw ValhallaError.valhallaError(error.code, error.message)
         }
         
-        Self.logger.info("Route calculation completed successfully")
-        return try JSONDecoder().decode(RouteResponse.self, from: resultData)
+        do {
+            let response = try JSONDecoder().decode(RouteResponse.self, from: resultData)
+            Self.logger.info("Route calculation completed successfully")
+            return response
+        } catch {
+            Self.logger.error("Failed to decode RouteResponse: \(error.localizedDescription)")
+            throw ValhallaError.decodingError("RouteResponse", error.localizedDescription)
+        }
     }
     
     public func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse {
@@ -97,8 +103,14 @@ public final class Valhalla: ValhallaProviding {
             throw ValhallaError.valhallaError(error.code, error.message)
         }
         
-        Self.logger.info("Trace attributes calculation completed successfully")
-        return try JSONDecoder().decode(TraceAttributesResponse.self, from: resultData)
+        do {
+            let response = try JSONDecoder().decode(TraceAttributesResponse.self, from: resultData)
+            Self.logger.info("Trace attributes calculation completed successfully")
+            return response
+        } catch {
+            Self.logger.error("Failed to decode TraceAttributesResponse: \(error)")
+            throw ValhallaError.decodingError("TraceAttributesResponse", error.localizedDescription)
+        }
     }
 
     public func route(rawRequest request: String) -> String {
