@@ -36,3 +36,13 @@ std::string ValhallaActor::trace_attributes(const std::string& request) {
     
     return result;
 }
+
+std::string ValhallaActor::matrix(const std::string& request) {
+    // Convert the request to a std::string
+    std::string req = std::string(request);
+    
+    // Produce the matrix result
+    std::string result = actor.matrix(req);
+    
+    return result;
+}

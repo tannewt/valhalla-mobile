@@ -14,6 +14,10 @@ public protocol ValhallaProviding {
     func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse
     
     func traceAttributes(rawRequest request: String) -> String
+    
+    func matrix(request: MatrixRequest) throws -> MatrixResponse
+    
+    func matrix(rawRequest request: String) -> String
 }
 
 public final class Valhalla: ValhallaProviding {
@@ -57,9 +61,9 @@ public final class Valhalla: ValhallaProviding {
             throw ValhallaError.encodingNotUtf8("requestStr")
         }
         
-        Self.logger.debug("Sending route request: \(requestStr)")
+        // Self.logger.debug("Sending route request: \(requestStr)")
         let resultStr = route(rawRequest: requestStr)
-        Self.logger.debug("Received route response: \(resultStr)")
+        // Self.logger.debug("Received route response: \(resultStr)")
         
         guard let resultData = resultStr.data(using: .utf8) else {
             Self.logger.error("Failed to decode response from UTF-8")
@@ -89,9 +93,9 @@ public final class Valhalla: ValhallaProviding {
             throw ValhallaError.encodingNotUtf8("requestStr")
         }
         
-        Self.logger.debug("Sending trace attributes request: \(requestStr)")
+        // Self.logger.debug("Sending trace attributes request: \(requestStr)")
         let resultStr = traceAttributes(rawRequest: requestStr)
-        Self.logger.debug("Received trace attributes response: \(resultStr)")
+        // Self.logger.debug("Received trace attributes response: \(resultStr)")
         
         guard let resultData = resultStr.data(using: .utf8) else {
             Self.logger.error("Failed to decode response from UTF-8")
@@ -126,6 +130,47 @@ public final class Valhalla: ValhallaProviding {
         Self.logger.debug("Timezone version: \(TimeZone.timeZoneDataVersion)")
         let result = actor!.traceAttributes(request)!
         Self.logger.debug("Raw trace_attributes request completed")
+        return result
+    }
+    
+    public func matrix(request: MatrixRequest) throws -> MatrixResponse {
+        Self.logger.info("Starting matrix calculation")
+        print(request)
+        let requestData = try JSONEncoder().encode(request)
+        guard let requestStr = String(data: requestData, encoding: .utf8) else {
+            Self.logger.error("Failed to encode request to UTF-8")
+            throw ValhallaError.encodingNotUtf8("requestStr")
+        }
+        
+        let resultStr = matrix(rawRequest: requestStr)
+        
+        guard let resultData = resultStr.data(using: .utf8) else {
+            Self.logger.error("Failed to decode response from UTF-8")
+            throw ValhallaError.encodingNotUtf8("resultData")
+        }
+        
+        if let error = try? JSONDecoder().decode(ValhallaErrorModel.self, from: resultData) {
+            Self.logger.error("Matrix calculation failed: \(error.message)")
+            throw ValhallaError.valhallaError(error.code, error.message)
+        }
+        
+        do {
+            print(resultData)
+            let response = try JSONDecoder().decode(MatrixResponse.self, from: resultData)
+            Self.logger.info("Matrix calculation completed successfully")
+            return response
+        } catch {
+            Self.logger.error("Failed to decode MatrixResponse: \(error.localizedDescription)")
+            print(error)
+            throw ValhallaError.decodingError("MatrixResponse", error.localizedDescription)
+        }
+    }
+    
+    public func matrix(rawRequest request: String) -> String {
+        Self.logger.debug("Processing raw matrix request")
+        let result = actor!.matrix(request)!
+        Self.logger.debug("Raw matrix request completed")
+        print(result)
         return result
     }
 }
